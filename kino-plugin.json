@@ -9,7 +9,8 @@
     "sololatino.net"
   ],
   "capabilities": [
-    "search"
+    "search",
+    "resolve"
   ],
   "permissions": {
     "network": [

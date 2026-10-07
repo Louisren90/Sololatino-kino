@@ -11,8 +11,5 @@
   "capabilities": [
     "search",
     "resolve"
-  ],
-  "permissions": [
-    "network"
   ]
 }

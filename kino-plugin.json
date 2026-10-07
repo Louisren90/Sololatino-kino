@@ -8,6 +8,10 @@
   "hosts": [
     "sololatino.net"
   ],
+  "capabilities": [
+    "search",
+    "sources"
+  ],
   "permissions": {
     "network": [
       "sololatino.net"

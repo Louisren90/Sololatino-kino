@@ -2,8 +2,8 @@ const BASE_URL = "https://sololatino.net";
 
 /**
  * Searches for movies and series on SoloLatino.
- * @param {string} query - The search term.
- * @returns {Promise<Array>} List of matching items.
+ * @param {string} query - The search query.
+ * @returns {Promise<Array>} List of search results.
  */
 async function search(query) {
   try {
@@ -20,7 +20,7 @@ async function search(query) {
     const html = await response.text();
     const results = [];
 
-    // Extract each card element from HTML results
+    // Extract items from search HTML results
     const itemRegex = /<article[^>]*class="[^"]*item[^"]*"[^>]*>([\s\S]*?)<\/article>/gi;
     let match;
 
@@ -59,11 +59,11 @@ async function search(query) {
 }
 
 /**
- * Extracts streaming video hosts for the selected item.
- * @param {string} id - The URL of the selected title.
- * @returns {Promise<Array>} List of playback sources.
+ * Resolves streaming video links/servers for the selected content.
+ * @param {string} id - The URL or ID of the selected content.
+ * @returns {Promise<Array>} List of video streams/embeds.
  */
-async function getSources(id) {
+async function resolve(id) {
   try {
     const targetUrl = id.startsWith("http") ? id : `${BASE_URL}/${id}`;
     const response = await fetch(targetUrl, {
@@ -78,7 +78,7 @@ async function getSources(id) {
     const html = await response.text();
     const sources = [];
 
-    // Search for embedded video players (iframes)
+    // Extract iframe embeds
     const iframeRegex = /<iframe[^>]+src="([^"]+)"/gi;
     let match;
 
@@ -89,12 +89,12 @@ async function getSources(id) {
         embedUrl = "https:" + embedUrl;
       }
 
-      // Ignore non-video embed widgets
+      // Skip non-video embeds
       if (embedUrl.includes("facebook") || embedUrl.includes("twitter") || embedUrl.includes("disqus")) {
         continue;
       }
 
-      // Tag host names based on domain
+      // Tag server names
       let serverName = "Web Server";
       if (embedUrl.includes("streamwish") || embedUrl.includes("swish")) serverName = "StreamWish (Latino)";
       else if (embedUrl.includes("filemoon")) serverName = "Filemoon (Latino)";
@@ -113,12 +113,17 @@ async function getSources(id) {
 
     return sources;
   } catch (error) {
-    console.error("Sources error:", error);
+    console.error("Resolve error:", error);
     return [];
   }
 }
 
-// Module export compatibility for execution environment
+// Alias for backwards compatibility
+async function getSources(id) {
+  return await resolve(id);
+}
+
+// Module exports for Kino TV runtime
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { search, getSources };
+  module.exports = { search, resolve, getSources };
 }

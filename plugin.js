@@ -2,8 +2,6 @@ const BASE_URL = "https://sololatino.net";
 
 /**
  * Buscador de películas y series en SoloLatino.
- * @param {string} query - Término de búsqueda.
- * @returns {Promise<Array>} Resultados de la búsqueda.
  */
 async function search(query) {
   try {
@@ -20,7 +18,6 @@ async function search(query) {
     const html = await response.text();
     const results = [];
 
-    // Extracción de tarjetas HTML
     const itemRegex = /<article[^>]*class="[^"]*item[^"]*"[^>]*>([\s\S]*?)<\/article>/gi;
     let match;
 
@@ -55,9 +52,7 @@ async function search(query) {
 }
 
 /**
- * Resolutor de enlaces/servidores de video.
- * @param {string} id - URL de la película o episodio.
- * @returns {Promise<Array>} Servidores de reproducción encontrados.
+ * Resolutor de reproducciones y servidores de video.
  */
 async function resolve(id) {
   try {
@@ -74,7 +69,6 @@ async function resolve(id) {
     const html = await response.text();
     const sources = [];
 
-    // Extracción de enlaces iframe
     const iframeRegex = /<iframe[^>]+src="([^"]+)"/gi;
     let match;
 
@@ -89,7 +83,7 @@ async function resolve(id) {
         continue;
       }
 
-      let serverName = "Web Server";
+      let serverName = "Servidor Web";
       if (embedUrl.includes("streamwish") || embedUrl.includes("swish")) serverName = "StreamWish (Latino)";
       else if (embedUrl.includes("filemoon")) serverName = "Filemoon (Latino)";
       else if (embedUrl.includes("voe")) serverName = "VOE (Latino)";
@@ -112,19 +106,15 @@ async function resolve(id) {
   }
 }
 
-// Exportación global explícita para compatibilidad con el entorno de Kino TV
-if (typeof globalThis !== "undefined") {
+// Asignación directa a todos los entornos de ejecución
+if (typeof globalThis !== 'undefined') {
   globalThis.search = search;
   globalThis.resolve = resolve;
 }
-if (typeof window !== "undefined") {
+if (typeof window !== 'undefined') {
   window.search = search;
   window.resolve = resolve;
 }
-if (typeof self !== "undefined") {
-  self.search = search;
-  self.resolve = resolve;
-}
-if (typeof module !== "undefined" && module.exports) {
+if (typeof module !== 'undefined' && module.exports) {
   module.exports = { search, resolve };
 }

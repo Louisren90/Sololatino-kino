@@ -5,6 +5,9 @@
   "apiVersion": 1,
   "description": "Spanish Latin movie and series provider for Kino TV.",
   "entry": "plugin.js",
+  "hosts": [
+    "sololatino.net"
+  ],
   "permissions": {
     "network": [
       "sololatino.net"

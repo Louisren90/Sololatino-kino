@@ -1,8 +1,16 @@
+const BASE_URL = "https://sololatino.net";
+
+/**
+ * Searches for movies and series on SoloLatino.
+ * @param {string} query - The search term.
+ * @returns {Promise<Array>} List of matching items.
+ */
 async function search(query) {
   try {
-    const response = await fetch(`https://sololatino.net/?s=${encodeURIComponent(query)}`, {
+    const searchUrl = `${BASE_URL}/?s=${encodeURIComponent(query)}`;
+    const response = await fetch(searchUrl, {
       headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         "Accept-Language": "es-ES,es;q=0.9"
       }
     });
@@ -10,8 +18,107 @@ async function search(query) {
     if (!response.ok) return [];
 
     const html = await response.text();
-    return [];
+    const results = [];
+
+    // Extract each card element from HTML results
+    const itemRegex = /<article[^>]*class="[^"]*item[^"]*"[^>]*>([\s\S]*?)<\/article>/gi;
+    let match;
+
+    while ((match = itemRegex.exec(html)) !== null) {
+      const itemHtml = match[1];
+
+      // Extract item URL
+      const linkMatch = /href="([^"]+)"/i.exec(itemHtml);
+      // Extract title
+      const titleMatch = /<h3[^>]*>([\s\S]*?)<\/h3>/i.exec(itemHtml) || /alt="([^"]+)"/i.exec(itemHtml);
+      // Extract poster image URL
+      const imgMatch = /src="([^"]+)"/i.exec(itemHtml) || /data-src="([^"]+)"/i.exec(itemHtml);
+
+      if (linkMatch && titleMatch) {
+        const itemUrl = linkMatch[1];
+        const title = titleMatch[1].replace(/<[^>]+>/g, '').trim();
+        const poster = imgMatch ? imgMatch[1] : '';
+
+        // Determine content type (TV show vs Movie)
+        const isTv = itemUrl.includes('/tvshows/') || itemUrl.includes('/series/');
+
+        results.push({
+          id: itemUrl,
+          title: title,
+          poster: poster,
+          type: isTv ? 'tv' : 'movie'
+        });
+      }
+    }
+
+    return results;
   } catch (error) {
+    console.error("Search error:", error);
     return [];
   }
+}
+
+/**
+ * Extracts streaming video hosts for the selected item.
+ * @param {string} id - The URL of the selected title.
+ * @returns {Promise<Array>} List of playback sources.
+ */
+async function getSources(id) {
+  try {
+    const targetUrl = id.startsWith("http") ? id : `${BASE_URL}/${id}`;
+    const response = await fetch(targetUrl, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Referer": BASE_URL
+      }
+    });
+
+    if (!response.ok) return [];
+
+    const html = await response.text();
+    const sources = [];
+
+    // Search for embedded video players (iframes)
+    const iframeRegex = /<iframe[^>]+src="([^"]+)"/gi;
+    let match;
+
+    while ((match = iframeRegex.exec(html)) !== null) {
+      let embedUrl = match[1];
+
+      if (embedUrl.startsWith("//")) {
+        embedUrl = "https:" + embedUrl;
+      }
+
+      // Ignore non-video embed widgets
+      if (embedUrl.includes("facebook") || embedUrl.includes("twitter") || embedUrl.includes("disqus")) {
+        continue;
+      }
+
+      // Tag host names based on domain
+      let serverName = "Web Server";
+      if (embedUrl.includes("streamwish") || embedUrl.includes("swish")) serverName = "StreamWish (Latino)";
+      else if (embedUrl.includes("filemoon")) serverName = "Filemoon (Latino)";
+      else if (embedUrl.includes("voe")) serverName = "VOE (Latino)";
+      else if (embedUrl.includes("dood") || embedUrl.includes("ds2play")) serverName = "DoodStream (Latino)";
+      else if (embedUrl.includes("vidhide") || embedUrl.includes("streamhide")) serverName = "VidHide (Latino)";
+      else if (embedUrl.includes("mixdrop")) serverName = "MixDrop (Latino)";
+
+      sources.push({
+        name: serverName,
+        url: embedUrl,
+        quality: "HD",
+        isEmbed: true
+      });
+    }
+
+    return sources;
+  } catch (error) {
+    console.error("Sources error:", error);
+    return [];
+  }
+}
+
+// Module export compatibility for execution environment
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = { search, getSources };
 }

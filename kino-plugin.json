@@ -13,6 +13,6 @@
     "resolve"
   ],
   "permissions": [
-    "sololatino.net"
+    "network"
   ]
 }

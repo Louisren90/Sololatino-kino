@@ -118,12 +118,15 @@ async function resolve(id) {
   }
 }
 
-// Alias for backwards compatibility
-async function getSources(id) {
-  return await resolve(id);
+// Exportacion explicita para todos los entornos JS (Global, CommonJS y Window)
+if (typeof globalThis !== "undefined") {
+  globalThis.search = search;
+  globalThis.resolve = resolve;
 }
-
-// Module exports for Kino TV runtime
+if (typeof window !== "undefined") {
+  window.search = search;
+  window.resolve = resolve;
+}
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { search, resolve, getSources };
+  module.exports = { search, resolve };
 }

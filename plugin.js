@@ -1,8 +1,5 @@
 const BASE_URL = "https://sololatino.net";
 
-/**
- * Buscador de películas y series en SoloLatino.
- */
 async function search(query) {
   try {
     const searchUrl = `${BASE_URL}/?s=${encodeURIComponent(query)}`;
@@ -51,9 +48,6 @@ async function search(query) {
   }
 }
 
-/**
- * Resolutor de reproducciones y servidores de video.
- */
 async function resolve(id) {
   try {
     const targetUrl = id.startsWith("http") ? id : `${BASE_URL}/${id}`;
@@ -106,7 +100,7 @@ async function resolve(id) {
   }
 }
 
-// Asignación directa a todos los entornos de ejecución
+// Asignación explícita para todos los motores de ejecución JS
 if (typeof globalThis !== 'undefined') {
   globalThis.search = search;
   globalThis.resolve = resolve;
@@ -114,6 +108,14 @@ if (typeof globalThis !== 'undefined') {
 if (typeof window !== 'undefined') {
   window.search = search;
   window.resolve = resolve;
+}
+if (typeof self !== 'undefined') {
+  self.search = search;
+  self.resolve = resolve;
+}
+if (typeof exports !== 'undefined') {
+  exports.search = search;
+  exports.resolve = resolve;
 }
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { search, resolve };

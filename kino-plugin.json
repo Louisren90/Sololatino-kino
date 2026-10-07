@@ -12,9 +12,7 @@
     "search",
     "resolve"
   ],
-  "permissions": {
-    "network": [
-      "sololatino.net"
-    ]
-  }
+  "permissions": [
+    "sololatino.net"
+  ]
 }

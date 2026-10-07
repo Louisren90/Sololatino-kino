@@ -1,9 +1,9 @@
 const BASE_URL = "https://sololatino.net";
 
 /**
- * Searches for movies and series on SoloLatino.
- * @param {string} query - The search query.
- * @returns {Promise<Array>} List of search results.
+ * Buscador de películas y series en SoloLatino.
+ * @param {string} query - Término de búsqueda.
+ * @returns {Promise<Array>} Resultados de la búsqueda.
  */
 async function search(query) {
   try {
@@ -20,18 +20,15 @@ async function search(query) {
     const html = await response.text();
     const results = [];
 
-    // Extract items from search HTML results
+    // Extracción de tarjetas HTML
     const itemRegex = /<article[^>]*class="[^"]*item[^"]*"[^>]*>([\s\S]*?)<\/article>/gi;
     let match;
 
     while ((match = itemRegex.exec(html)) !== null) {
       const itemHtml = match[1];
 
-      // Extract item URL
       const linkMatch = /href="([^"]+)"/i.exec(itemHtml);
-      // Extract title
       const titleMatch = /<h3[^>]*>([\s\S]*?)<\/h3>/i.exec(itemHtml) || /alt="([^"]+)"/i.exec(itemHtml);
-      // Extract poster image URL
       const imgMatch = /src="([^"]+)"/i.exec(itemHtml) || /data-src="([^"]+)"/i.exec(itemHtml);
 
       if (linkMatch && titleMatch) {
@@ -39,7 +36,6 @@ async function search(query) {
         const title = titleMatch[1].replace(/<[^>]+>/g, '').trim();
         const poster = imgMatch ? imgMatch[1] : '';
 
-        // Determine content type (TV show vs Movie)
         const isTv = itemUrl.includes('/tvshows/') || itemUrl.includes('/series/');
 
         results.push({
@@ -53,15 +49,15 @@ async function search(query) {
 
     return results;
   } catch (error) {
-    console.error("Search error:", error);
+    console.error("Error en search:", error);
     return [];
   }
 }
 
 /**
- * Resolves streaming video links/servers for the selected content.
- * @param {string} id - The URL or ID of the selected content.
- * @returns {Promise<Array>} List of video streams/embeds.
+ * Resolutor de enlaces/servidores de video.
+ * @param {string} id - URL de la película o episodio.
+ * @returns {Promise<Array>} Servidores de reproducción encontrados.
  */
 async function resolve(id) {
   try {
@@ -78,7 +74,7 @@ async function resolve(id) {
     const html = await response.text();
     const sources = [];
 
-    // Extract iframe embeds
+    // Extracción de enlaces iframe
     const iframeRegex = /<iframe[^>]+src="([^"]+)"/gi;
     let match;
 
@@ -89,12 +85,10 @@ async function resolve(id) {
         embedUrl = "https:" + embedUrl;
       }
 
-      // Skip non-video embeds
       if (embedUrl.includes("facebook") || embedUrl.includes("twitter") || embedUrl.includes("disqus")) {
         continue;
       }
 
-      // Tag server names
       let serverName = "Web Server";
       if (embedUrl.includes("streamwish") || embedUrl.includes("swish")) serverName = "StreamWish (Latino)";
       else if (embedUrl.includes("filemoon")) serverName = "Filemoon (Latino)";
@@ -113,12 +107,12 @@ async function resolve(id) {
 
     return sources;
   } catch (error) {
-    console.error("Resolve error:", error);
+    console.error("Error en resolve:", error);
     return [];
   }
 }
 
-// Exportacion explicita para todos los entornos JS (Global, CommonJS y Window)
+// Exportación global explícita para compatibilidad con el entorno de Kino TV
 if (typeof globalThis !== "undefined") {
   globalThis.search = search;
   globalThis.resolve = resolve;
@@ -126,6 +120,10 @@ if (typeof globalThis !== "undefined") {
 if (typeof window !== "undefined") {
   window.search = search;
   window.resolve = resolve;
+}
+if (typeof self !== "undefined") {
+  self.search = search;
+  self.resolve = resolve;
 }
 if (typeof module !== "undefined" && module.exports) {
   module.exports = { search, resolve };

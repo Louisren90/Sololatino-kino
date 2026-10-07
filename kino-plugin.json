@@ -1,5 +1,5 @@
 {
-  "id": "com.sololatino.plugin",
+  "id": "sololatino-plugin",
   "name": "SoloLatino",
   "version": "1.0.0",
   "description": "Spanish Latin movie and series provider for Kino TV.",
